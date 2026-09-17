@@ -13,7 +13,8 @@
 
     <!-- Bootstrap grid/layout utilities are used to preserve the original markup's container/row/col-* structure -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
+    <!-- slick-carousel's CSS is bundled locally via src/main.jsx instead of this CDN,
+         so the Reviews carousel's horizontal layout never depends on an external request. -->
 
     <link rel="stylesheet" href="/assets/fonts/Figtree/figtree.css">
     <link rel="stylesheet" href="/assets/fonts/NewSpirit/newspirit.css">
