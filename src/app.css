@@ -128,6 +128,12 @@ img, img:focus {
     animation: none !important;
     transform: none !important;
   }
+  /* .feature-card also carries .reveal-pane (for its fade-in on desktop),
+     so the blanket transform:none above was unintentionally cancelling its
+     hover scale effect on mobile/tablet too -- restore it specifically. */
+  .feature-card.reveal-pane:hover {
+    transform: scale(1.03) !important;
+  }
 }
 
 /** Slick dots **/
