@@ -18,7 +18,11 @@ export default function App() {
 
   return (
     <div ref={appRef}>
-      <Header activeSection={scroll.activeSection} headerHidden={scroll.headerHidden} />
+      <Header
+        activeSection={scroll.activeSection}
+        setActiveSection={scroll.setActiveSection}
+        headerHidden={scroll.headerHidden}
+      />
 
       <Hero onWatchVideo={() => setVideoOpen(true)} />
       <Features />

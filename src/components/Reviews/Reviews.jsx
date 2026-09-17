@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Slider from 'react-slick';
 import reviews from '../../data/reviews';
 import useCounter from '../../hooks/useCounter';
@@ -19,35 +19,6 @@ export default function Reviews() {
   const [navSlider, setNavSlider] = useState(null);
   const [contentSlider, setContentSlider] = useState(null);
 
-  // centerMode + variableWidth + infinite is a known react-slick combination
-  // where the initial mount can measure slide/clone widths before the
-  // browser's first layout pass has fully settled, leaving the track
-  // permanently offset by a partial slide width (visible as the centered
-  // label's leading characters being clipped, and neighboring labels
-  // clipped short). Forcing one resize recalculation right after mount,
-  // once the browser has actually painted, corrects it without touching
-  // the original centerMode/variableWidth/infinite configuration.
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      window.dispatchEvent(new Event('resize'));
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
-
-  // The same variableWidth+infinite+centerMode combination also drifts
-  // *cumulatively*: every infinite-mode clone swap can leave the track's
-  // measured offset a few pixels off from the previous transition, and with
-  // autoplay running continuously those small errors compound over several
-  // rotations until the track has drifted entirely out of .slick-list's
-  // viewport -- the ribbon (separate DOM) stays visible while the slide
-  // text appears blank, until infinite mode's own clone bookkeeping
-  // happens to realign it. Re-forcing the same resize recalculation after
-  // every single transition (not just once at mount) re-measures and
-  // re-centers the track each time, so the error can never accumulate.
-  const handleAfterChange = () => {
-    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
-  };
-
   const navSettings = {
     slidesToShow: 5,
     arrows: false,
@@ -56,14 +27,26 @@ export default function Reviews() {
     autoplaySpeed: 3000,
     centerMode: true,
     centerPadding: '60px',
-    variableWidth: true,
+    // `variableWidth` combined with `centerMode` + `infinite` + `autoplay`
+    // is a long-documented, unresolved react-slick instability: the track's
+    // measured-width bookkeeping for cloned slides drifts a little more on
+    // every autoplay transition, and over several rotations that drift
+    // compounds until the track lands entirely outside .slick-list's
+    // clipped viewport (ribbon visible, text blank) -- a forced resize
+    // recalculation (tried in the previous pass) only nudges the same
+    // fragile measurement path and didn't hold up under real, continuous
+    // autoplay. Our six labels are all short/similar length ("Convenient"
+    // .. "Helpful and Easy"), so a fixed slide width reproduces the same
+    // visual result without needing per-slide width measurement at all --
+    // removing that measurement step removes the actual drift source,
+    // rather than papering over its symptom again. centerMode, infinite,
+    // autoplay, focusOnSelect, centerPadding and asNavFor are unchanged.
     adaptiveHeight: true,
     slidesToScroll: 1,
     dots: false,
     focusOnSelect: true,
     infinite: true,
     asNavFor: contentSlider,
-    afterChange: handleAfterChange,
     responsive: [
       {
         breakpoint: 992,

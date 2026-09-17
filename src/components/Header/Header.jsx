@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import scrollLock from '../../hooks/scrollLock';
 import './Header.css';
 
 const NAV_LINKS = [
@@ -17,7 +18,7 @@ const NAV_LINKS = [
 const NAV_SCROLL_DURATION = 800;
 const swing = (pos) => 0.5 - Math.cos(pos * Math.PI) / 2;
 
-export default function Header({ activeSection, headerHidden }) {
+export default function Header({ activeSection, setActiveSection, headerHidden }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const magicLineRef = useRef(null);
@@ -50,6 +51,11 @@ export default function Header({ activeSection, headerHidden }) {
     const target = document.getElementById(id);
     if (target) {
       cancelAnimationFrame(scrollAnimationRef.current);
+      // Held for the whole animation so useScrollBehavior's passive,
+      // scroll-position-based section detection doesn't fight this click's
+      // intended destination with whatever section the animation happens
+      // to be scrolling past mid-flight (see useScrollBehavior.js).
+      scrollLock.isNavigating = true;
       const startY = window.scrollY;
       const targetY = target.getBoundingClientRect().top + startY;
       const distance = targetY - startY;
@@ -61,6 +67,11 @@ export default function Header({ activeSection, headerHidden }) {
         if (pos < 1) {
           scrollAnimationRef.current = requestAnimationFrame(step);
         } else {
+          // The click unambiguously means "this is now the active section"
+          // -- set it directly rather than waiting on (and trusting) the
+          // passive scroll-position detection to infer it correctly.
+          setActiveSection?.(id);
+          scrollLock.isNavigating = false;
           window.history.replaceState(null, '', `#${id}`);
         }
       };
@@ -69,7 +80,13 @@ export default function Header({ activeSection, headerHidden }) {
     setMenuOpen(false);
   };
 
-  useEffect(() => () => cancelAnimationFrame(scrollAnimationRef.current), []);
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(scrollAnimationRef.current);
+      scrollLock.isNavigating = false;
+    },
+    []
+  );
 
   return (
     <header className={`fixed-top px-0 pb-0${headerHidden ? ' hidden-header' : ''}`}>

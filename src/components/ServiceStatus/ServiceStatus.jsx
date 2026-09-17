@@ -1,33 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import serviceStatusSlides from '../../data/serviceStatus';
 import useServiceStatusController from '../../hooks/useServiceStatusController';
 import useResponsive from '../../hooks/useResponsive';
 import ImageLightbox from '../ImageLightbox/ImageLightbox';
 import './ServiceStatus.css';
 
-// Slick's default autoplaySpeed is 3000ms; the original never overrides it
-// in the <=992px `responsive` blocks that turn autoplay on, so 3000 (not an
-// arbitrary value) is what it actually relies on.
-const AUTOPLAY_INTERVAL = 3000;
 const SWIPE_THRESHOLD = 40;
 
 export default function ServiceStatus({ onHideHeader }) {
   const { isDesktop } = useResponsive();
+  // useServiceStatusController now owns ONE authoritative 3s auto-advance
+  // timer (desktop and mobile alike, coexisting with the wheel interaction)
+  // -- a separate mobile-only setInterval here would be a second, competing
+  // timer driving the same state, which is exactly what was to be avoided.
   const { sectionRef, pathRef, activeIndex, circlePoint, goToIndex } = useServiceStatusController({
     onHideHeader,
   });
   const [lightboxImage, setLightboxImage] = useState(null);
   const touchStartX = useRef(null);
-
-  // Mobile/tablet: autoplay + swipe, matching the original slick `responsive`
-  // overrides (infinite, dots, autoplay, draggable) below the 992px breakpoint.
-  useEffect(() => {
-    if (isDesktop) return undefined;
-    const timer = setInterval(() => {
-      goToIndex((activeIndex + 1) % serviceStatusSlides.length);
-    }, AUTOPLAY_INTERVAL);
-    return () => clearInterval(timer);
-  }, [isDesktop, activeIndex, goToIndex]);
 
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
