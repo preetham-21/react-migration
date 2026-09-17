@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Slider from 'react-slick';
 import reviews from '../../data/reviews';
 import useCounter from '../../hooks/useCounter';
@@ -12,81 +12,129 @@ import './Reviews.css';
 // style sidesteps the conflict entirely -- app.css's .slick-dots rule then
 // applies cleanly.
 const appendDots = (dots) => <ul className="slick-dots">{dots}</ul>;
+
 const AUTOPLAY_SPEED = 3000;
+const TRANSITION_MS = 500;
+const REAL_COUNT = reviews.length; // 6
+const LEAD_CLONES = 2;
+const TRAIL_CLONES = 2;
+const REAL_START = LEAD_CLONES; // real index 0 lives at render position 2
 
 // The nav bar (six category pills, natural width, one centered in a ribbon,
-// neighbors peeking in from both sides, continuously autoplaying) was built
-// on react-slick's centerMode+variableWidth+autoplay combination through
-// several previous passes, tuning `infinite` on and off, with and without a
-// forced resize. Real-browser testing kept surfacing the same class of bug
-// (a blank ribbon) regardless -- that specific combination of react-slick
-// features is simply not reliable enough for this. It's replaced below with
-// a small, fully custom implementation: a plain flex row of naturally-sized
-// pills inside a hidden-overflow container, centered on the active one via
-// the browser's own native `scrollIntoView({ inline: 'center' })`. There is
-// no width measurement, no cloned slides, no track-position bookkeeping to
-// ever drift -- the browser's own scroll-centering is the only thing
-// positioning it, so it cannot go blank. The content slider below (plain
-// `fade`, no centerMode/variableWidth) was never reported broken and is
-// left on react-slick.
+// with real neighbors -- or, at the array's ends, wrapped neighbors --
+// peeking in on both sides, continuously autoplaying forever) needs a
+// genuinely seamless infinite loop: "Great Service" -> "Convenient" must
+// look like ordinary forward motion, never a reverse sweep back across the
+// whole row. A real scrolling container (tried previously, via
+// scrollIntoView) can't do that -- wrapping from the last real item to the
+// first is necessarily a long *backward* scroll. react-slick's own
+// `infinite` mode fakes this with cloned slides, but that specific
+// combination (variableWidth + centerMode + infinite + autoplay) proved
+// unreliable across several passes (real-browser testing kept showing a
+// blank ribbon).
+//
+// This hand-rolls the same "clone slides" idea react-slick uses, without
+// react-slick: the rendered row is [clone(4), clone(5), real 0..5,
+// clone(0), clone(1)] -- 2 duplicate pills at each end. A CSS
+// `transform: translateX()` (not a real scroll) slides the row to center
+// whichever position is active. Advancing past the last real position
+// (7) moves onto its trailing clone (8, a pixel-identical duplicate of
+// position 2); once that transition finishes, the position is silently
+// reset to 2 with the CSS transition disabled for one frame -- since the
+// clone is pixel-identical to the real item, that reset is invisible, and
+// the loop can continue forward forever. Clicking always targets a real
+// position (2-7) directly, so only autoplay's forward stepping ever visits
+// the clone positions.
 export default function Reviews() {
   const iosCounter = useCounter(4.8);
   const androidCounter = useCounter(4.7);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [renderPosition, setRenderPosition] = useState(REAL_START);
+  const [trackOffset, setTrackOffset] = useState(0);
+  const [suppressTransition, setSuppressTransition] = useState(true);
   const [contentSlider, setContentSlider] = useState(null);
+
   const navContainerRef = useRef(null);
   const navTrackRef = useRef(null);
   const itemRefs = useRef([]);
   const autoplayRef = useRef(null);
   const pausedRef = useRef(false);
-  const hasCenteredOnceRef = useRef(false);
 
-  // Give the track enough empty space on each side (half the visible
-  // container's width) that scrollIntoView can actually center even the
-  // first/last pill, not just ones with real neighbors on both sides.
+  const activeRealIndex = (((renderPosition - REAL_START) % REAL_COUNT) + REAL_COUNT) % REAL_COUNT;
+
+  const renderItems = [
+    ...reviews.slice(REAL_COUNT - LEAD_CLONES).map((review, i) => ({
+      review,
+      realIndex: REAL_COUNT - LEAD_CLONES + i,
+      key: `lead-${i}`,
+    })),
+    ...reviews.map((review, i) => ({ review, realIndex: i, key: `real-${i}` })),
+    ...reviews.slice(0, TRAIL_CLONES).map((review, i) => ({ review, realIndex: i, key: `trail-${i}` })),
+  ];
+
+  const moveToRealIndex = (realIndex) => {
+    setRenderPosition(REAL_START + realIndex);
+  };
+
+  // Re-center the track on the active position -- measured via plain
+  // offsetLeft (layout position, unaffected by the transform itself) so
+  // the math never gets contaminated by whatever transform is currently
+  // mid-transition.
+  useLayoutEffect(() => {
+    const container = navContainerRef.current;
+    const activeEl = itemRefs.current[renderPosition];
+    if (!container || !activeEl) return;
+    const offset = container.clientWidth / 2 - (activeEl.offsetLeft + activeEl.offsetWidth / 2);
+    setTrackOffset(offset);
+  });
+
+  // Recompute on resize too (widths/container size can change).
   useEffect(() => {
     const container = navContainerRef.current;
-    const track = navTrackRef.current;
-    if (!container || !track) return undefined;
-
-    const applyPadding = () => {
-      const half = container.clientWidth / 2;
-      track.style.paddingLeft = `${half}px`;
-      track.style.paddingRight = `${half}px`;
+    if (!container) return undefined;
+    const recompute = () => {
+      const activeEl = itemRefs.current[renderPosition];
+      if (!activeEl) return;
+      setTrackOffset(container.clientWidth / 2 - (activeEl.offsetLeft + activeEl.offsetWidth / 2));
     };
-    applyPadding();
-
-    const observer = new ResizeObserver(applyPadding);
+    const observer = new ResizeObserver(recompute);
     observer.observe(container);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Center the active pill whenever it changes -- the very first
-  // positioning (page load) is instant, not animated; only subsequent
-  // moves (autoplay/click) smoothly slide.
+  // The very first positioning (page load) happens with the transition
+  // disabled, so it doesn't visibly slide in from the left on mount.
   useEffect(() => {
-    itemRefs.current[activeIndex]?.scrollIntoView({
-      behavior: hasCenteredOnceRef.current ? 'smooth' : 'auto',
-      inline: 'center',
-      block: 'nearest',
-    });
-    hasCenteredOnceRef.current = true;
-  }, [activeIndex]);
+    const id = requestAnimationFrame(() => setSuppressTransition(false));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
-  // Drive the content slider to match, once it's mounted -- kept as a
-  // separate effect so a late-arriving `contentSlider` ref doesn't also
-  // re-trigger the nav's own scrollIntoView above.
+  // Once a step lands on a trailing clone (past the last real position),
+  // wait for that transition to finish, then silently reset onto the
+  // pixel-identical real position with the transition disabled for one
+  // frame -- the loop then continues forward indefinitely.
   useEffect(() => {
-    contentSlider?.slickGoTo(activeIndex);
-  }, [activeIndex, contentSlider]);
+    if (renderPosition < REAL_START + REAL_COUNT) return undefined;
+    const timer = setTimeout(() => {
+      setSuppressTransition(true);
+      setRenderPosition(renderPosition - REAL_COUNT);
+      requestAnimationFrame(() => requestAnimationFrame(() => setSuppressTransition(false)));
+    }, TRANSITION_MS);
+    return () => clearTimeout(timer);
+  }, [renderPosition]);
+
+  // Drive the content slider to match, once it's mounted.
+  useEffect(() => {
+    contentSlider?.slickGoTo(activeRealIndex);
+  }, [activeRealIndex, contentSlider]);
 
   // Continuous autoplay, paused on hover (matching the original's
-  // `pauseOnHover: true`) -- a plain index increment, so "last -> first" is
-  // just ordinary wraparound arithmetic, not a special case.
+  // `pauseOnHover: true`) -- a plain forward step; the effect above turns
+  // "one step past the end" into a seamless loop.
   useEffect(() => {
     autoplayRef.current = setInterval(() => {
       if (pausedRef.current) return;
-      setActiveIndex((prev) => (prev + 1) % reviews.length);
+      setRenderPosition((prev) => prev + 1);
     }, AUTOPLAY_SPEED);
     return () => clearInterval(autoplayRef.current);
   }, []);
@@ -99,7 +147,7 @@ export default function Reviews() {
     fade: true,
     infinite: false,
     appendDots,
-    afterChange: (index) => setActiveIndex(index),
+    afterChange: (index) => moveToRealIndex(index),
     responsive: [
       {
         breakpoint: 767,
@@ -158,22 +206,29 @@ export default function Reviews() {
               pausedRef.current = false;
             }}
           >
-            <div className="navtab-track" ref={navTrackRef}>
-              {reviews.map((review, index) => (
+            <div
+              className="navtab-track"
+              ref={navTrackRef}
+              style={{
+                transform: `translateX(${trackOffset}px)`,
+                transition: suppressTransition ? 'none' : `transform ${TRANSITION_MS}ms ease`,
+              }}
+            >
+              {renderItems.map((item, position) => (
                 <div
-                  key={review.tab}
+                  key={item.key}
                   ref={(el) => {
-                    itemRefs.current[index] = el;
+                    itemRefs.current[position] = el;
                   }}
-                  className={`navtab-slide${index === activeIndex ? ' slick-current' : ''}`}
-                  onClick={() => setActiveIndex(index)}
+                  className={`navtab-slide${position === renderPosition ? ' slick-current' : ''}`}
+                  onClick={() => moveToRealIndex(item.realIndex)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') setActiveIndex(index);
+                    if (e.key === 'Enter' || e.key === ' ') moveToRealIndex(item.realIndex);
                   }}
                 >
-                  {review.tab}
+                  {item.review.tab}
                 </div>
               ))}
             </div>

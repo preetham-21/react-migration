@@ -24,6 +24,8 @@
   position: relative;
   flex: 0 0 auto;
   white-space: nowrap;
+  min-width: 250px;
+  text-align: center;
   padding: 6px 20px;
   margin: 0 10px;
   color: var(--color_white);
@@ -65,13 +67,7 @@
 }
 .reviewslider-nav {
   position: relative;
-  overflow-x: hidden;
-  /* Hide the native scrollbar across browsers -- scrollIntoView still
-     drives it programmatically regardless of overflow:hidden. */
-  scrollbar-width: none;
-}
-.reviewslider-nav::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
 }
 .reviewslider-nav:after,
 .reviewslider-nav:before {
@@ -94,11 +90,9 @@
 .navtab-track {
   display: flex;
   align-items: center;
+  position: relative;
   width: max-content;
-  /* Left/right padding is set inline (Reviews.jsx) to half the visible
-     container's width, so scrollIntoView({inline:'center'}) has enough
-     empty scrollable space to actually center even the first/last pill,
-     not just the ones with real neighbors on both sides. */
+  will-change: transform;
 }
 .review-section .highlight-banner .navtab-slide.slick-current {
   position: relative;
