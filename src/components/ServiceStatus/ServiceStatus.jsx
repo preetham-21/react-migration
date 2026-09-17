@@ -5,7 +5,10 @@ import useResponsive from '../../hooks/useResponsive';
 import ImageLightbox from '../ImageLightbox/ImageLightbox';
 import './ServiceStatus.css';
 
-const AUTOPLAY_INTERVAL = 4000;
+// Slick's default autoplaySpeed is 3000ms; the original never overrides it
+// in the <=992px `responsive` blocks that turn autoplay on, so 3000 (not an
+// arbitrary value) is what it actually relies on.
+const AUTOPLAY_INTERVAL = 3000;
 const SWIPE_THRESHOLD = 40;
 
 export default function ServiceStatus({ onHideHeader }) {

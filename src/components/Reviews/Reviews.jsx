@@ -34,6 +34,20 @@ export default function Reviews() {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // The same variableWidth+infinite+centerMode combination also drifts
+  // *cumulatively*: every infinite-mode clone swap can leave the track's
+  // measured offset a few pixels off from the previous transition, and with
+  // autoplay running continuously those small errors compound over several
+  // rotations until the track has drifted entirely out of .slick-list's
+  // viewport -- the ribbon (separate DOM) stays visible while the slide
+  // text appears blank, until infinite mode's own clone bookkeeping
+  // happens to realign it. Re-forcing the same resize recalculation after
+  // every single transition (not just once at mount) re-measures and
+  // re-centers the track each time, so the error can never accumulate.
+  const handleAfterChange = () => {
+    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+  };
+
   const navSettings = {
     slidesToShow: 5,
     arrows: false,
@@ -49,6 +63,7 @@ export default function Reviews() {
     focusOnSelect: true,
     infinite: true,
     asNavFor: contentSlider,
+    afterChange: handleAfterChange,
     responsive: [
       {
         breakpoint: 992,
