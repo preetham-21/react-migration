@@ -62,16 +62,28 @@ export default function useScrollBehavior() {
       // section the animation is currently scrolling past.
       if (scrollLock.isNavigating) return;
 
+      // Sections are checked by "which one's top have we most recently
+      // scrolled past", not by "are we within [top, top+ownHeight)". The
+      // latter used each section's OWN offsetHeight as its range, but
+      // .features-section has `margin-top: -100px` (see Features.css),
+      // which pulls it up to visually overlap the bottom ~100px of
+      // .home-section without changing home-section's own offsetHeight --
+      // so that 100px band still matched homesection's range and kept the
+      // nav on "Home" even though Features had already visually painted
+      // over it. Finding the last section whose top boundary we've reached
+      // is correct regardless of any such overlap between adjacent sections.
+      let current = SECTION_IDS[0];
       for (const id of SECTION_IDS) {
         const el = document.getElementById(id);
         if (!el) continue;
-        const sectionOffset = el.getBoundingClientRect().top + window.scrollY - 70;
-        const sectionHeight = el.offsetHeight;
-        if (scrollPosition >= sectionOffset && scrollPosition < sectionOffset + sectionHeight) {
-          setActiveSection(id);
+        const sectionTop = el.getBoundingClientRect().top + window.scrollY - 70;
+        if (scrollPosition >= sectionTop) {
+          current = id;
+        } else {
           break;
         }
       }
+      setActiveSection(current);
     }, 100);
 
     const handleHeaderVisibility = () => {

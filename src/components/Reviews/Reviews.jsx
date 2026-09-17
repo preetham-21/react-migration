@@ -52,6 +52,19 @@ export default function Reviews() {
         breakpoint: 992,
         settings: { slidesToShow: 3 },
       },
+      {
+        // Without `variableWidth`, each slide's width is trackWidth /
+        // slidesToShow. Below 767px (the same mobile breakpoint used
+        // elsewhere in this app, e.g. Reviews.css/ServiceStatus.css), 3
+        // slides plus a 60px centerPadding on each side leaves each label
+        // too little room for text like "Helpful and Easy", so neighboring
+        // labels visually crowd right up against the centered one. Showing
+        // only 1 slide at this width gives the centered label the full
+        // available space, with neighbors mostly pushed off past
+        // centerPadding instead of colliding with it.
+        breakpoint: 767,
+        settings: { slidesToShow: 1 },
+      },
     ],
   };
 

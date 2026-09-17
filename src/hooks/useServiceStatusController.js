@@ -15,9 +15,11 @@ function indexFromValue(value) {
 // Reproduces the original desktop-only "wheel over the status section drives
 // a 0-100 slider in 25% steps, which moves an orange dot along the SVG zigzag
 // path and swaps the synced text/image slides" interaction, plus the window
-// scroll-lock that pins the page to the section while that's happening --
-// and additionally auto-advances the same state every 3s, independent of
-// scrolling, on both desktop and mobile, while the section is on screen.
+// scroll-lock that pins the page to the section while that's happening.
+// Desktop stays exclusively scroll/wheel-driven (no timer at all); at
+// mobile/tablet widths (<=992px) the same state additionally auto-advances
+// every 3s while the section is on screen, since there's no wheel-scroll
+// interaction to drive it there.
 export default function useServiceStatusController({ onHideHeader }) {
   const sectionRef = useRef(null);
   const pathRef = useRef(null);
@@ -75,23 +77,26 @@ export default function useServiceStatusController({ onHideHeader }) {
     [updateCircle]
   );
 
-  // One authoritative timer drives automatic progression: it reschedules
-  // itself (recursive setTimeout, not setInterval) after every fire so it
-  // can never queue a second transition while one is still animating, and
-  // it shares animateSlider/valueRef/isAnimatingRef with the wheel handler
-  // below -- there is only ever one state, whichever mechanism last moved
-  // it. If the wheel interaction is mid-animation when this fires, it
-  // retries shortly instead of starting a competing transition. State 3
-  // wrapping back to state 0 has no shortcut on the fixed physical SVG
-  // path, so the dot smoothly sweeps back across the whole path for that
-  // one transition, same as any other -- it just takes longer (4 * 50ms
-  // steps = ~5s) than a single-state step (~1.25s).
+  // One authoritative timer drives automatic progression, but ONLY at
+  // mobile/tablet widths (<=992px) -- matching the original's own
+  // breakpoint-gated autoplay, and restoring desktop to being exclusively
+  // wheel/scroll-driven with no competing timer at all, as it was before
+  // auto-advance was added. It reschedules itself (recursive setTimeout,
+  // not setInterval) after every fire so it can never queue a second
+  // transition while one is still animating, and it shares
+  // animateSlider/valueRef/isAnimatingRef with the wheel handler below --
+  // there is only ever one state, whichever mechanism last moved it. State
+  // 3 wrapping back to state 0 has no shortcut on the fixed physical SVG
+  // path, so the dot (only actually visible on mobile-hidden widths this
+  // never renders anyway) would sweep the full path for that transition.
   const scheduleAutoAdvance = useCallback(() => {
     clearTimeout(autoAdvanceTimeoutRef.current);
     if (!mountedRef.current || !isVisibleRef.current) return;
+    if (window.innerWidth > DESKTOP_BREAKPOINT) return;
 
     autoAdvanceTimeoutRef.current = setTimeout(() => {
       if (!mountedRef.current || !isVisibleRef.current) return;
+      if (window.innerWidth > DESKTOP_BREAKPOINT) return;
       if (isAnimatingRef.current) {
         autoAdvanceTimeoutRef.current = setTimeout(() => scheduleAutoAdvance(), AUTO_ADVANCE_RETRY);
         return;

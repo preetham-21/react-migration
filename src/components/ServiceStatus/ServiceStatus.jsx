@@ -9,10 +9,10 @@ const SWIPE_THRESHOLD = 40;
 
 export default function ServiceStatus({ onHideHeader }) {
   const { isDesktop } = useResponsive();
-  // useServiceStatusController now owns ONE authoritative 3s auto-advance
-  // timer (desktop and mobile alike, coexisting with the wheel interaction)
-  // -- a separate mobile-only setInterval here would be a second, competing
-  // timer driving the same state, which is exactly what was to be avoided.
+  // useServiceStatusController owns the ONE authoritative 3s auto-advance
+  // timer (mobile/tablet only -- desktop stays exclusively wheel-driven) --
+  // a separate setInterval here would be a second, competing timer driving
+  // the same state, which is exactly what was to be avoided.
   const { sectionRef, pathRef, activeIndex, circlePoint, goToIndex } = useServiceStatusController({
     onHideHeader,
   });
