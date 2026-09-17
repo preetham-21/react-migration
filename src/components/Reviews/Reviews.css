@@ -22,10 +22,13 @@
   opacity: 0.8;
   cursor: pointer;
   position: relative;
-  min-width: 250px;
+  flex: 0 0 auto;
+  white-space: nowrap;
   padding: 6px 20px;
+  margin: 0 10px;
   color: var(--color_white);
   font-family: var(--ff-newsprit);
+  transition: opacity 0.2s, color 0.2s;
 }
 .review-section .highlight-banner .sliderbackground-overlay:before {
   width: 0px;
@@ -62,6 +65,13 @@
 }
 .reviewslider-nav {
   position: relative;
+  overflow-x: hidden;
+  /* Hide the native scrollbar across browsers -- scrollIntoView still
+     drives it programmatically regardless of overflow:hidden. */
+  scrollbar-width: none;
+}
+.reviewslider-nav::-webkit-scrollbar {
+  display: none;
 }
 .reviewslider-nav:after,
 .reviewslider-nav:before {
@@ -74,18 +84,22 @@
   position: absolute;
   top: 0px;
   z-index: 1;
+  pointer-events: none;
 }
 .reviewslider-nav:after {
   left: auto;
   right: 0px;
   background: linear-gradient(90deg, transparent 0%, #841a5f 80%);
 }
-/* react-slick wraps each child in its own .slick-slide div and puts the
-   state classes on that wrapper (unlike jQuery slick, which put them
-   directly on the original .navtab-slide.slick-current.slick-center
-   element) -- the descendant selector below is the required adaptation
-   for react-slick's DOM so the centered-tab highlight still works. */
-.review-section .highlight-banner .slick-current .navtab-slide,
+.navtab-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  /* Left/right padding is set inline (Reviews.jsx) to half the visible
+     container's width, so scrollIntoView({inline:'center'}) has enough
+     empty scrollable space to actually center even the first/last pill,
+     not just the ones with real neighbors on both sides. */
+}
 .review-section .highlight-banner .navtab-slide.slick-current {
   position: relative;
   opacity: 1;

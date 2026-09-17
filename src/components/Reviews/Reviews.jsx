@@ -14,67 +14,82 @@ import './Reviews.css';
 const appendDots = (dots) => <ul className="slick-dots">{dots}</ul>;
 const AUTOPLAY_SPEED = 3000;
 
+// The nav bar (six category pills, natural width, one centered in a ribbon,
+// neighbors peeking in from both sides, continuously autoplaying) was built
+// on react-slick's centerMode+variableWidth+autoplay combination through
+// several previous passes, tuning `infinite` on and off, with and without a
+// forced resize. Real-browser testing kept surfacing the same class of bug
+// (a blank ribbon) regardless -- that specific combination of react-slick
+// features is simply not reliable enough for this. It's replaced below with
+// a small, fully custom implementation: a plain flex row of naturally-sized
+// pills inside a hidden-overflow container, centered on the active one via
+// the browser's own native `scrollIntoView({ inline: 'center' })`. There is
+// no width measurement, no cloned slides, no track-position bookkeeping to
+// ever drift -- the browser's own scroll-centering is the only thing
+// positioning it, so it cannot go blank. The content slider below (plain
+// `fade`, no centerMode/variableWidth) was never reported broken and is
+// left on react-slick.
 export default function Reviews() {
   const iosCounter = useCounter(4.8);
   const androidCounter = useCounter(4.7);
-  const [navSlider, setNavSlider] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [contentSlider, setContentSlider] = useState(null);
-  const wrapTimeoutRef = useRef(null);
+  const navContainerRef = useRef(null);
+  const navTrackRef = useRef(null);
+  const itemRefs = useRef([]);
+  const autoplayRef = useRef(null);
+  const pausedRef = useRef(false);
+  const hasCenteredOnceRef = useRef(false);
 
-  useEffect(() => () => clearTimeout(wrapTimeoutRef.current), []);
+  // Give the track enough empty space on each side (half the visible
+  // container's width) that scrollIntoView can actually center even the
+  // first/last pill, not just ones with real neighbors on both sides.
+  useEffect(() => {
+    const container = navContainerRef.current;
+    const track = navTrackRef.current;
+    if (!container || !track) return undefined;
 
-  // `infinite: true` is what actually caused the "blank after several
-  // rotations" bug, not `variableWidth` -- infinite mode's clone-slide
-  // bookkeeping (rendering extra copies before/after the real slides to
-  // fake a seamless wrap) drifts a little on every transition, and under
-  // continuous autoplay that drift compounds until the track lands
-  // entirely outside .slick-list's viewport. variableWidth is what gives
-  // each label its own natural width with even gaps between them (see the
-  // reference screenshot) instead of forcing 3-5 equal-width boxes that
-  // crowd together at narrow widths -- removing it (tried previously) lost
-  // that look for no longer benefit, once the real culprit (infinite) is
-  // addressed directly instead. So: infinite:false removes the clone
-  // machinery entirely (variableWidth + centerMode without clones is far
-  // more stable), and the "6 -> 1" loop is completed manually below --
-  // react-slick's own autoplay simply stops advancing once infinite:false
-  // reaches the last slide (canGoNext returns false), so afterChange
-  // pauses its internal timer there, waits one more autoplaySpeed itself,
-  // jumps back to slide 0, then resumes autoplay -- keeping the same
-  // one-step-every-3s cadence with no clone-based state to ever drift.
-  const handleAfterChange = (currentSlide) => {
-    clearTimeout(wrapTimeoutRef.current);
-    if (currentSlide === reviews.length - 1) {
-      navSlider?.slickPause?.();
-      wrapTimeoutRef.current = setTimeout(() => {
-        navSlider?.slickGoTo(0);
-        navSlider?.slickPlay?.();
-      }, AUTOPLAY_SPEED);
-    }
-  };
+    const applyPadding = () => {
+      const half = container.clientWidth / 2;
+      track.style.paddingLeft = `${half}px`;
+      track.style.paddingRight = `${half}px`;
+    };
+    applyPadding();
 
-  const navSettings = {
-    slidesToShow: 5,
-    arrows: false,
-    pauseOnHover: true,
-    autoplay: true,
-    autoplaySpeed: AUTOPLAY_SPEED,
-    centerMode: true,
-    centerPadding: '60px',
-    variableWidth: true,
-    adaptiveHeight: true,
-    slidesToScroll: 1,
-    dots: false,
-    focusOnSelect: true,
-    infinite: false,
-    asNavFor: contentSlider,
-    afterChange: handleAfterChange,
-    responsive: [
-      {
-        breakpoint: 992,
-        settings: { slidesToShow: 3 },
-      },
-    ],
-  };
+    const observer = new ResizeObserver(applyPadding);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // Center the active pill whenever it changes -- the very first
+  // positioning (page load) is instant, not animated; only subsequent
+  // moves (autoplay/click) smoothly slide.
+  useEffect(() => {
+    itemRefs.current[activeIndex]?.scrollIntoView({
+      behavior: hasCenteredOnceRef.current ? 'smooth' : 'auto',
+      inline: 'center',
+      block: 'nearest',
+    });
+    hasCenteredOnceRef.current = true;
+  }, [activeIndex]);
+
+  // Drive the content slider to match, once it's mounted -- kept as a
+  // separate effect so a late-arriving `contentSlider` ref doesn't also
+  // re-trigger the nav's own scrollIntoView above.
+  useEffect(() => {
+    contentSlider?.slickGoTo(activeIndex);
+  }, [activeIndex, contentSlider]);
+
+  // Continuous autoplay, paused on hover (matching the original's
+  // `pauseOnHover: true`) -- a plain index increment, so "last -> first" is
+  // just ordinary wraparound arithmetic, not a special case.
+  useEffect(() => {
+    autoplayRef.current = setInterval(() => {
+      if (pausedRef.current) return;
+      setActiveIndex((prev) => (prev + 1) % reviews.length);
+    }, AUTOPLAY_SPEED);
+    return () => clearInterval(autoplayRef.current);
+  }, []);
 
   const contentSettings = {
     slidesToShow: 1,
@@ -83,8 +98,8 @@ export default function Reviews() {
     dots: false,
     fade: true,
     infinite: false,
-    asNavFor: navSlider,
     appendDots,
+    afterChange: (index) => setActiveIndex(index),
     responsive: [
       {
         breakpoint: 767,
@@ -133,14 +148,35 @@ export default function Reviews() {
       <div className="container custom-container position-relative" style={{ zIndex: 2 }}>
         <div className="highlight-banner mb-4 position-relative">
           <div className="sliderbackground-overlay"></div>
-          <div className="reviewslider-nav">
-            <Slider ref={setNavSlider} {...navSettings}>
-              {reviews.map((review) => (
-                <div className="navtab-slide" key={review.tab}>
+          <div
+            className="reviewslider-nav"
+            ref={navContainerRef}
+            onMouseEnter={() => {
+              pausedRef.current = true;
+            }}
+            onMouseLeave={() => {
+              pausedRef.current = false;
+            }}
+          >
+            <div className="navtab-track" ref={navTrackRef}>
+              {reviews.map((review, index) => (
+                <div
+                  key={review.tab}
+                  ref={(el) => {
+                    itemRefs.current[index] = el;
+                  }}
+                  className={`navtab-slide${index === activeIndex ? ' slick-current' : ''}`}
+                  onClick={() => setActiveIndex(index)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') setActiveIndex(index);
+                  }}
+                >
                   {review.tab}
                 </div>
               ))}
-            </Slider>
+            </div>
           </div>
         </div>
       </div>
