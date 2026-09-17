@@ -10,9 +10,10 @@ const SWIPE_THRESHOLD = 40;
 export default function ServiceStatus({ onHideHeader }) {
   const { isDesktop } = useResponsive();
   // useServiceStatusController owns the ONE authoritative 3s auto-advance
-  // timer (mobile/tablet only -- desktop stays exclusively wheel-driven) --
-  // a separate setInterval here would be a second, competing timer driving
-  // the same state, which is exactly what was to be avoided.
+  // timer for `activeIndex` (text + image, every viewport) -- a separate
+  // setInterval here would be a second, competing timer driving the same
+  // state. The SVG circle is a fully separate piece of state inside that
+  // hook, moved only by an actual wheel/scroll event.
   const { sectionRef, pathRef, activeIndex, circlePoint, goToIndex } = useServiceStatusController({
     onHideHeader,
   });

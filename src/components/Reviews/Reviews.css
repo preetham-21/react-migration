@@ -22,12 +22,7 @@
   opacity: 0.8;
   cursor: pointer;
   position: relative;
-  /* No variableWidth anymore (see Reviews.jsx) -- react-slick sizes each
-     .slick-slide (the same element as .navtab-slide) via its own inline
-     width, computed as track-width / slidesToShow. A min-width here could
-     fight that inline width and desync centerMode's own math, so the box
-     is sized entirely by react-slick and this element just centers its text. */
-  text-align: center;
+  min-width: 250px;
   padding: 6px 20px;
   color: var(--color_white);
   font-family: var(--ff-newsprit);
@@ -108,6 +103,7 @@
     width: 215px;
   }
   .review-section .highlight-banner .navtab-slide {
+    min-width: 215px;
     font-size: 20px;
   }
   .review-section .decorative-icon img {

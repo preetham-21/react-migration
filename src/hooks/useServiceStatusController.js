@@ -3,7 +3,6 @@ import scrollLock from './scrollLock';
 
 const DESKTOP_BREAKPOINT = 992;
 const AUTO_ADVANCE_INTERVAL = 3000;
-const AUTO_ADVANCE_RETRY = 250;
 
 function indexFromValue(value) {
   if (value < 25) return 0;
@@ -12,14 +11,23 @@ function indexFromValue(value) {
   return 3;
 }
 
-// Reproduces the original desktop-only "wheel over the status section drives
-// a 0-100 slider in 25% steps, which moves an orange dot along the SVG zigzag
-// path and swaps the synced text/image slides" interaction, plus the window
-// scroll-lock that pins the page to the section while that's happening.
-// Desktop stays exclusively scroll/wheel-driven (no timer at all); at
-// mobile/tablet widths (<=992px) the same state additionally auto-advances
-// every 3s while the section is on screen, since there's no wheel-scroll
-// interaction to drive it there.
+// Two independent things share this hook, on purpose:
+//
+// 1. `activeIndex` (which text + image are shown) auto-rotates on a plain
+//    3s interval, continuously, on every viewport, regardless of
+//    scrolling -- and a wheel/scroll transition can also jump it directly
+//    to match wherever the user scrolled to. There is no per-step
+//    animation involved in switching text/image (just the CSS
+//    crossfade/slide-track transition already in ServiceStatus.css), so a
+//    plain interval is enough; it never needs to coordinate with the
+//    circle's animation state.
+//
+// 2. `circlePoint` (the SVG dot's position on the zigzag path) moves ONLY
+//    in response to an actual wheel/scroll event on desktop -- reproducing
+//    the original's "wheel over the status section drives a 0-100 slider
+//    in 25% steps, which moves the dot along the path" interaction, plus
+//    the window scroll-lock that pins the page to the section while that's
+//    happening. The auto-advance interval never touches it.
 export default function useServiceStatusController({ onHideHeader }) {
   const sectionRef = useRef(null);
   const pathRef = useRef(null);
@@ -32,8 +40,6 @@ export default function useServiceStatusController({ onHideHeader }) {
   const pathLengthRef = useRef(null);
   const animationTimeoutRef = useRef(null);
   const mountedRef = useRef(true);
-  const autoAdvanceTimeoutRef = useRef(null);
-  const isVisibleRef = useRef(false);
 
   const updateCircle = useCallback((value) => {
     const path = pathRef.current;
@@ -77,40 +83,6 @@ export default function useServiceStatusController({ onHideHeader }) {
     [updateCircle]
   );
 
-  // One authoritative timer drives automatic progression, but ONLY at
-  // mobile/tablet widths (<=992px) -- matching the original's own
-  // breakpoint-gated autoplay, and restoring desktop to being exclusively
-  // wheel/scroll-driven with no competing timer at all, as it was before
-  // auto-advance was added. It reschedules itself (recursive setTimeout,
-  // not setInterval) after every fire so it can never queue a second
-  // transition while one is still animating, and it shares
-  // animateSlider/valueRef/isAnimatingRef with the wheel handler below --
-  // there is only ever one state, whichever mechanism last moved it. State
-  // 3 wrapping back to state 0 has no shortcut on the fixed physical SVG
-  // path, so the dot (only actually visible on mobile-hidden widths this
-  // never renders anyway) would sweep the full path for that transition.
-  const scheduleAutoAdvance = useCallback(() => {
-    clearTimeout(autoAdvanceTimeoutRef.current);
-    if (!mountedRef.current || !isVisibleRef.current) return;
-    if (window.innerWidth > DESKTOP_BREAKPOINT) return;
-
-    autoAdvanceTimeoutRef.current = setTimeout(() => {
-      if (!mountedRef.current || !isVisibleRef.current) return;
-      if (window.innerWidth > DESKTOP_BREAKPOINT) return;
-      if (isAnimatingRef.current) {
-        autoAdvanceTimeoutRef.current = setTimeout(() => scheduleAutoAdvance(), AUTO_ADVANCE_RETRY);
-        return;
-      }
-      const currentValue = valueRef.current;
-      const nextIndex = (indexFromValue(currentValue) + 1) % 4;
-      const targetValue = nextIndex * 25;
-      animateSlider(currentValue, targetValue, () => {
-        setActiveIndex(nextIndex);
-        scheduleAutoAdvance();
-      });
-    }, AUTO_ADVANCE_INTERVAL);
-  }, [animateSlider]);
-
   useEffect(() => {
     // React 18 StrictMode deliberately runs mount -> cleanup -> mount again
     // in development. Without re-arming this flag here, the first (simulated)
@@ -122,31 +94,39 @@ export default function useServiceStatusController({ onHideHeader }) {
     return () => {
       mountedRef.current = false;
       clearTimeout(animationTimeoutRef.current);
-      clearTimeout(autoAdvanceTimeoutRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Only run the 3s auto-advance timer while the section is actually on
-  // screen, not for the whole page's lifetime.
+  // The text/image auto-rotation: a plain interval, only running while the
+  // section is actually on screen (not for the page's whole lifetime), on
+  // every viewport, untouched by scroll/wheel state.
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return undefined;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isVisibleRef.current = entry.isIntersecting;
-        if (entry.isIntersecting) {
-          scheduleAutoAdvance();
-        } else {
-          clearTimeout(autoAdvanceTimeoutRef.current);
-        }
-      },
-      { threshold: 0 }
-    );
+    let intervalId = null;
+    const start = () => {
+      if (intervalId) return;
+      intervalId = setInterval(() => {
+        setActiveIndex((prev) => (prev + 1) % 4);
+      }, AUTO_ADVANCE_INTERVAL);
+    };
+    const stop = () => {
+      clearInterval(intervalId);
+      intervalId = null;
+    };
+
+    const observer = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()), {
+      threshold: 0,
+    });
     observer.observe(section);
-    return () => observer.disconnect();
-  }, [scheduleAutoAdvance]);
+
+    return () => {
+      stop();
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -177,11 +157,10 @@ export default function useServiceStatusController({ onHideHeader }) {
       const targetValue = Math.max(0, Math.min(100, currentValue + adjustedDelta));
       if (targetValue !== currentValue) {
         animateSlider(currentValue, targetValue, () => {
+          // Scrolling directly sets which text/image is shown, same as the
+          // auto-rotation does -- it just doesn't reset or pause that
+          // rotation's own independent 3s cadence.
           setActiveIndex(indexFromValue(targetValue));
-          // A manual scroll just moved the state -- give the user a fresh
-          // 3s before auto-advance resumes, instead of it firing right on
-          // top of what the user just did.
-          scheduleAutoAdvance();
         });
       }
     };
@@ -212,7 +191,7 @@ export default function useServiceStatusController({ onHideHeader }) {
       section.removeEventListener('wheel', onWheel);
       clearTimeout(debounceRef.current);
     };
-  }, [animateSlider, onHideHeader, scheduleAutoAdvance]);
+  }, [animateSlider, onHideHeader]);
 
   const goToIndex = useCallback(
     (index) => {
@@ -221,11 +200,8 @@ export default function useServiceStatusController({ onHideHeader }) {
       valueRef.current = target;
       updateCircle(target);
       setActiveIndex(index);
-      // Manual navigation (mobile swipe/dot click) -- same hand-off as the
-      // wheel path: reset the countdown instead of racing it.
-      scheduleAutoAdvance();
     },
-    [updateCircle, scheduleAutoAdvance]
+    [updateCircle]
   );
 
   return { sectionRef, pathRef, activeIndex, circlePoint, goToIndex };

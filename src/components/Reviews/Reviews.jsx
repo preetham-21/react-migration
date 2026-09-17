@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Slider from 'react-slick';
 import reviews from '../../data/reviews';
 import useCounter from '../../hooks/useCounter';
@@ -12,58 +12,66 @@ import './Reviews.css';
 // style sidesteps the conflict entirely -- app.css's .slick-dots rule then
 // applies cleanly.
 const appendDots = (dots) => <ul className="slick-dots">{dots}</ul>;
+const AUTOPLAY_SPEED = 3000;
 
 export default function Reviews() {
   const iosCounter = useCounter(4.8);
   const androidCounter = useCounter(4.7);
   const [navSlider, setNavSlider] = useState(null);
   const [contentSlider, setContentSlider] = useState(null);
+  const wrapTimeoutRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(wrapTimeoutRef.current), []);
+
+  // `infinite: true` is what actually caused the "blank after several
+  // rotations" bug, not `variableWidth` -- infinite mode's clone-slide
+  // bookkeeping (rendering extra copies before/after the real slides to
+  // fake a seamless wrap) drifts a little on every transition, and under
+  // continuous autoplay that drift compounds until the track lands
+  // entirely outside .slick-list's viewport. variableWidth is what gives
+  // each label its own natural width with even gaps between them (see the
+  // reference screenshot) instead of forcing 3-5 equal-width boxes that
+  // crowd together at narrow widths -- removing it (tried previously) lost
+  // that look for no longer benefit, once the real culprit (infinite) is
+  // addressed directly instead. So: infinite:false removes the clone
+  // machinery entirely (variableWidth + centerMode without clones is far
+  // more stable), and the "6 -> 1" loop is completed manually below --
+  // react-slick's own autoplay simply stops advancing once infinite:false
+  // reaches the last slide (canGoNext returns false), so afterChange
+  // pauses its internal timer there, waits one more autoplaySpeed itself,
+  // jumps back to slide 0, then resumes autoplay -- keeping the same
+  // one-step-every-3s cadence with no clone-based state to ever drift.
+  const handleAfterChange = (currentSlide) => {
+    clearTimeout(wrapTimeoutRef.current);
+    if (currentSlide === reviews.length - 1) {
+      navSlider?.slickPause?.();
+      wrapTimeoutRef.current = setTimeout(() => {
+        navSlider?.slickGoTo(0);
+        navSlider?.slickPlay?.();
+      }, AUTOPLAY_SPEED);
+    }
+  };
 
   const navSettings = {
     slidesToShow: 5,
     arrows: false,
     pauseOnHover: true,
     autoplay: true,
-    autoplaySpeed: 3000,
+    autoplaySpeed: AUTOPLAY_SPEED,
     centerMode: true,
     centerPadding: '60px',
-    // `variableWidth` combined with `centerMode` + `infinite` + `autoplay`
-    // is a long-documented, unresolved react-slick instability: the track's
-    // measured-width bookkeeping for cloned slides drifts a little more on
-    // every autoplay transition, and over several rotations that drift
-    // compounds until the track lands entirely outside .slick-list's
-    // clipped viewport (ribbon visible, text blank) -- a forced resize
-    // recalculation (tried in the previous pass) only nudges the same
-    // fragile measurement path and didn't hold up under real, continuous
-    // autoplay. Our six labels are all short/similar length ("Convenient"
-    // .. "Helpful and Easy"), so a fixed slide width reproduces the same
-    // visual result without needing per-slide width measurement at all --
-    // removing that measurement step removes the actual drift source,
-    // rather than papering over its symptom again. centerMode, infinite,
-    // autoplay, focusOnSelect, centerPadding and asNavFor are unchanged.
+    variableWidth: true,
     adaptiveHeight: true,
     slidesToScroll: 1,
     dots: false,
     focusOnSelect: true,
-    infinite: true,
+    infinite: false,
     asNavFor: contentSlider,
+    afterChange: handleAfterChange,
     responsive: [
       {
         breakpoint: 992,
         settings: { slidesToShow: 3 },
-      },
-      {
-        // Without `variableWidth`, each slide's width is trackWidth /
-        // slidesToShow. Below 767px (the same mobile breakpoint used
-        // elsewhere in this app, e.g. Reviews.css/ServiceStatus.css), 3
-        // slides plus a 60px centerPadding on each side leaves each label
-        // too little room for text like "Helpful and Easy", so neighboring
-        // labels visually crowd right up against the centered one. Showing
-        // only 1 slide at this width gives the centered label the full
-        // available space, with neighbors mostly pushed off past
-        // centerPadding instead of colliding with it.
-        breakpoint: 767,
-        settings: { slidesToShow: 1 },
       },
     ],
   };
@@ -74,6 +82,7 @@ export default function Reviews() {
     arrows: false,
     dots: false,
     fade: true,
+    infinite: false,
     asNavFor: navSlider,
     appendDots,
     responsive: [
