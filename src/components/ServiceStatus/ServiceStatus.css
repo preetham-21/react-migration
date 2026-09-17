@@ -1,0 +1,170 @@
+.pinwheelshadow {
+  position: relative;
+}
+.pinwheelshadow:after {
+  width: 100%;
+  height: 100%;
+  content: '';
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  background: url('/assets/images/pinwheel.svg') top 350px center no-repeat;
+  background-size: 110%;
+}
+
+.statusmap-section {
+  color: white;
+  padding: 50px 0 0px;
+  position: relative;
+  background: #FF8C00;
+}
+#movingCircle {
+  transition: all 0.1s linear;
+}
+#scrollableSection {
+  min-height: 300px;
+  overflow-y: auto;
+}
+.service-map {
+  display: flex;
+  padding: 0px 20px;
+  align-items: stretch;
+}
+
+.absolute-panel {
+  position: absolute;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 54px 40px 0px 80px;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  top: 0px;
+  left: 0px;
+  transform: scale(1);
+  opacity: 1;
+  transition: all 0.3s linear;
+}
+.absolute-panel .sliderstatustext {
+  width: 100%;
+  position: relative;
+}
+.slidetext {
+  display: none;
+}
+.slidetext.current {
+  display: block;
+  animation: fade-in-text 0.4s ease-in;
+}
+@keyframes fade-in-text {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.statusimagewrap {
+  margin-top: 55px;
+}
+
+.column-left,
+.column-right {
+  width: 50%;
+  position: relative;
+  padding: 0px 10px;
+  box-sizing: border-box;
+}
+
+.responsive-svg {
+  width: 100%;
+  height: auto;
+}
+
+.sliderstatusimages {
+  overflow: hidden;
+}
+.slideimage-track {
+  display: flex;
+  transition: transform 0.4s ease-in-out;
+}
+.slideimage {
+  flex: 0 0 100%;
+  max-width: 100%;
+  text-align: center;
+}
+
+@media (max-width: 992px) {
+  .absolute-panel {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    padding: 54px 40px 0px 80px;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    transform: scale(0.9);
+    opacity: 0.4;
+    transition: all 0.3s linear;
+  }
+  .absolute-panel.active {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .responsive-svg {
+    display: none;
+  }
+  .absolute-panel {
+    padding: 0px 15px 0px 0px;
+  }
+  .service-map {
+    padding: 20px 20px 40px;
+    min-height: auto;
+    overflow-y: hidden;
+  }
+  .sliderstatusimages .img-fluid {
+    max-width: 100% !important;
+  }
+  .statusimagewrap {
+    margin-top: 0px;
+  }
+
+  /* Nested intentionally, matching the original source: this only ever
+     applies at <=992px anyway since it's inside that query, but the exact
+     nesting is preserved for source fidelity. */
+  @media (max-width: 1024px) {
+    .absolute-panel {
+      opacity: 0;
+      transform: translateX(-50%) scale(1);
+    }
+    .absolute-panel.active {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .service-map {
+    flex-direction: column;
+    padding: 20px 0px 40px;
+  }
+  .service-map .column-left,
+  .service-map .column-right {
+    width: 100%;
+  }
+  .absolute-panel {
+    position: static;
+  }
+  .leftContentTitle {
+    font-size: 24px;
+    text-align: center;
+  }
+  .leftContentText {
+    font-size: 16px;
+    line-height: 20px;
+    text-align: center;
+  }
+}

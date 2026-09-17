@@ -1,0 +1,147 @@
+header.fixed-top {
+  background-color: transparent;
+  box-shadow: none;
+  top: 20px;
+  transition: top 0.3s;
+  position: fixed;
+  right: 0;
+  left: 0;
+  z-index: 1030;
+}
+header.fixed-top.hidden-header {
+  top: -120px;
+}
+
+.nav-section {
+  border-radius: 12px;
+  padding: 0px 15px;
+  box-shadow: 0px 0px 8px 0px #999;
+}
+header.fixed-top .loginbtn {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 48px;
+  background-color: var(--action_clr);
+  padding: 0px 24px;
+  border-radius: 12px;
+  color: #fff !important;
+  text-decoration: none !important;
+}
+header.fixed-top .loginbtn:hover {
+  background-color: var(--action_hvr_clr);
+  color: #fff !important;
+  text-decoration: none !important;
+}
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+nav ul li a.nav-link {
+  text-decoration: none;
+  color: var(--color_black);
+  cursor: pointer;
+  padding: 25px 0px 23px !important;
+  border-bottom: 2px solid transparent;
+  transition: color 0.3s;
+}
+header.fixed-top .navbar-nav .nav-link {
+  color: var(--color_black);
+  font-weight: 400;
+}
+.navbar-light .navbar-nav .nav-link:focus,
+.navbar-light .navbar-nav .active > .nav-link,
+.navbar-light .navbar-nav .nav-link.active,
+.navbar-light .navbar-nav .nav-link.show,
+.navbar-light .navbar-nav .show > .nav-link,
+header.fixed-top nav ul li a.nav-link.active {
+  color: var(--action_clr);
+  font-weight: bold;
+}
+header.fixed-top .navbar-nav .nav-link:hover {
+  color: var(--action_clr);
+}
+
+#navbarNav {
+  position: relative;
+}
+#magic-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #00a859;
+  transition: all 0.3s ease;
+}
+.nav-item {
+  position: relative;
+  padding: 0px 10px;
+}
+
+@media (max-width: 992px) {
+  .nav-section {
+    padding: 6px 15px;
+  }
+  ul.navbar-nav {
+    gap: 4px;
+    padding-top: 10px;
+  }
+  ul.navbar-nav li {
+    padding: 0px;
+  }
+  .navbar-toggler {
+    margin-left: auto;
+  }
+  .navbar-light .navbar-toggler:focus,
+  .navbar-light .navbar-toggler:hover {
+    background-color: transparent;
+    outline: none;
+  }
+  .navbar-light .navbar-toggler {
+    border: none;
+  }
+  .navbar-toggler span.icon-bar {
+    transition: all 0.15s;
+    display: block;
+    width: 22px;
+    background-color: #666;
+    height: 2px;
+    border-radius: 1px;
+  }
+  .navbar-toggler .icon-bar + .icon-bar {
+    margin-top: 4px;
+  }
+  .navbar-toggler span:nth-child(2) {
+    transform: rotate(45deg);
+    transform-origin: 10% 10%;
+  }
+  .navbar-toggler span:nth-child(3) {
+    opacity: 0;
+  }
+  .navbar-toggler span:nth-child(4) {
+    transform: rotate(-45deg);
+    transform-origin: 10% 90%;
+  }
+  .navbar-toggler.collapsed span:nth-child(2),
+  .navbar-toggler.collapsed span:nth-child(4) {
+    transform: rotate(0);
+  }
+  .navbar-toggler.collapsed span:nth-child(3) {
+    opacity: 1;
+  }
+  .loginbtn {
+    position: absolute;
+    right: 70px;
+    top: 8px;
+  }
+  nav ul li a.nav-link {
+    padding: 6px 10px !important;
+  }
+  #magic-line {
+    display: none;
+  }
+  header.fixed-top.hidden-header {
+    top: 20px !important;
+  }
+}

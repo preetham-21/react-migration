@@ -1,0 +1,118 @@
+.review-section {
+  color: white;
+  padding: 50px 0;
+  background: #931D65;
+}
+.review-section .stars img {
+  height: 45px;
+  margin: 0 2px;
+}
+.rating-point {
+  font-size: 50px;
+  margin: 25px auto 0px;
+  line-height: 55px;
+  font-family: var(--font-light);
+}
+.review-section .decorative-icon {
+  margin: 20px 0;
+}
+
+.review-section .highlight-banner .navtab-slide {
+  font-size: 24px;
+  opacity: 0.8;
+  cursor: pointer;
+  position: relative;
+  min-width: 250px;
+  padding: 6px 20px;
+  color: var(--color_white);
+  font-family: var(--ff-newsprit);
+}
+.review-section .highlight-banner .sliderbackground-overlay:before {
+  width: 0px;
+  height: 0px;
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 0px;
+  border-style: solid;
+  border-width: 24px 17px 24px 0;
+  border-color: transparent var(--color-purple) transparent transparent;
+}
+.review-section .highlight-banner .sliderbackground-overlay {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  background-color: #f0f0f0;
+  z-index: 0;
+  pointer-events: none;
+  height: 100%;
+}
+.review-section .highlight-banner .sliderbackground-overlay:after {
+  width: 0px;
+  height: 0px;
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0px;
+  border-style: solid;
+  border-width: 24px 0 24px 17px;
+  border-color: transparent transparent transparent var(--color-purple);
+}
+.reviewslider-nav {
+  position: relative;
+}
+.reviewslider-nav:after,
+.reviewslider-nav:before {
+  height: 100%;
+  width: 100px;
+  left: 0px;
+  content: '';
+  background: linear-gradient(90deg, #841a5f 0%, transparent 80%);
+  display: block;
+  position: absolute;
+  top: 0px;
+  z-index: 1;
+}
+.reviewslider-nav:after {
+  left: auto;
+  right: 0px;
+  background: linear-gradient(90deg, transparent 0%, #841a5f 80%);
+}
+/* react-slick wraps each child in its own .slick-slide div and puts the
+   state classes on that wrapper (unlike jQuery slick, which put them
+   directly on the original .navtab-slide.slick-current.slick-center
+   element) -- the descendant selector below is the required adaptation
+   for react-slick's DOM so the centered-tab highlight still works. */
+.review-section .highlight-banner .slick-current .navtab-slide,
+.review-section .highlight-banner .navtab-slide.slick-current {
+  position: relative;
+  opacity: 1;
+  color: var(--color-purple);
+}
+
+@media (max-width: 767px) {
+  .rating-point {
+    margin: 10px auto 0px;
+  }
+  .review-section .decorative-icon {
+    margin: 0px 0px 10px;
+  }
+  .review-section .highlight-banner .sliderbackground-overlay {
+    width: 215px;
+  }
+  .review-section .highlight-banner .navtab-slide {
+    min-width: 215px;
+    font-size: 20px;
+  }
+  .review-section .decorative-icon img {
+    height: 60px !important;
+  }
+}
+@media (max-width: 576px) {
+  .reviewslider-nav:after,
+  .reviewslider-nav:before {
+    width: 30px;
+  }
+}

@@ -1,0 +1,18 @@
+.home-section {
+  padding: 140px 0px 200px;
+  min-height: 100vh;
+  background: var(--action_clr) url('/assets/images/pinwheel.svg') center center no-repeat;
+  background-size: 110%;
+}
+.youtube-btn,
+.youtube-btn:hover,
+.youtube-btn:focus {
+  text-decoration: none;
+  font-size: 24px;
+}
+
+@media (max-width: 992px) {
+  .home-section {
+    padding: 100px 0px 150px;
+  }
+}

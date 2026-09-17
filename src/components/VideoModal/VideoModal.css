@@ -1,0 +1,65 @@
+.video-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.video-modal-dialog {
+  width: 100%;
+  max-width: 800px;
+}
+.video-modal-content {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+.video-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #dee2e6;
+}
+.video-modal-title {
+  margin: 0;
+  font-size: 18px;
+}
+.modal-close-icon,
+.modal-close-icon:hover,
+.modal-close-icon:focus {
+  background: transparent url(/assets/images/close-ico.png) center center no-repeat;
+  border: 0px !important;
+  outline: none !important;
+  height: 25px;
+  width: 25px;
+  background-size: 20px;
+  cursor: pointer;
+}
+.video-modal-body {
+  padding: 0;
+}
+.framevideo-container {
+  position: relative;
+  display: block;
+  padding: 0;
+  padding-bottom: 56.25%;
+  margin: 0;
+  height: 0;
+  overflow: hidden;
+}
+.framevideo {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  border: 0;
+}
