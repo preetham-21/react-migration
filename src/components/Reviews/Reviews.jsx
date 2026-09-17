@@ -1,14 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Slider from 'react-slick';
 import reviews from '../../data/reviews';
 import useCounter from '../../hooks/useCounter';
 import './Reviews.css';
+
+// react-slick's default appendDots renders <ul style={{ display: "block" }}>.
+// That's an inline style, which always wins over an external stylesheet rule
+// (our .slick-dots{display:flex} in app.css), so the dots' default <li>
+// display (browser default list-item, since slick-theme.css was never
+// bundled) stacks them vertically. Supplying our own wrapper with no inline
+// style sidesteps the conflict entirely -- app.css's .slick-dots rule then
+// applies cleanly.
+const appendDots = (dots) => <ul className="slick-dots">{dots}</ul>;
 
 export default function Reviews() {
   const iosCounter = useCounter(4.8);
   const androidCounter = useCounter(4.7);
   const [navSlider, setNavSlider] = useState(null);
   const [contentSlider, setContentSlider] = useState(null);
+
+  // centerMode + variableWidth + infinite is a known react-slick combination
+  // where the initial mount can measure slide/clone widths before the
+  // browser's first layout pass has fully settled, leaving the track
+  // permanently offset by a partial slide width (visible as the centered
+  // label's leading characters being clipped, and neighboring labels
+  // clipped short). Forcing one resize recalculation right after mount,
+  // once the browser has actually painted, corrects it without touching
+  // the original centerMode/variableWidth/infinite configuration.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   const navSettings = {
     slidesToShow: 5,
@@ -40,6 +64,7 @@ export default function Reviews() {
     dots: false,
     fade: true,
     asNavFor: navSlider,
+    appendDots,
     responsive: [
       {
         breakpoint: 767,

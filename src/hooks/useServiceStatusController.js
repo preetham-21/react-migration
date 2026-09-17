@@ -70,6 +70,12 @@ export default function useServiceStatusController({ onHideHeader }) {
   );
 
   useEffect(() => {
+    // React 18 StrictMode deliberately runs mount -> cleanup -> mount again
+    // in development. Without re-arming this flag here, the first (simulated)
+    // cleanup would leave mountedRef stuck at false forever, silently
+    // no-op'ing every animateSlider tick and permanently wedging
+    // isAnimatingRef at true after the very first wheel event.
+    mountedRef.current = true;
     updateCircle(0);
     return () => {
       mountedRef.current = false;
