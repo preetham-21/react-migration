@@ -86,44 +86,30 @@
   font-family: var(--ff-newsprit);
   transition: opacity 0.2s, color 0.2s;
 }
-.review-section .highlight-banner .sliderbackground-overlay:before {
-  width: 0px;
-  height: 0px;
-  content: '';
-  position: absolute;
-  right: -1px;
-  top: 0px;
-  border-style: solid;
-  border-width: 24px 17px 24px 0;
-  border-color: transparent var(--color-purple) transparent transparent;
-  /* Two rounds of opacity/mix-blend-mode/blur tuning here each made this
-     look worse, not better, by direct testing -- without a live browser
-     to actually see the rendered result, further colorimetric guessing
-     isn't a responsible way to fix this. Reverted to the literal,
-     unmodified value from reference/original-styles.css: flat, solid,
-     sharp, matching the section's own --color-purple exactly. */
-}
+/* The pointed ribbon ends were previously built from two separate
+   triangle pseudo-elements colored to match the section's background, so
+   they'd "disappear" against it -- but the actual background is a
+   multi-shade gradient pattern (.pinwheelshadow), not one flat color, so
+   no single flat triangle color could ever match all of it at once (tried
+   three different color/opacity/blend-mode combinations; all looked
+   wrong). The fix is to not need a color match at all: cut the pointed
+   shape directly out of the ribbon rectangle itself via clip-path, so the
+   whole ribbon is one plain #f0f0f0 shape with nothing else layered on
+   top that needs to blend with anything. The rectangle is widened by the
+   old triangles' 17px point-width on each side, and the two extra
+   polygon points on each end taper it to a single sharp vertex there --
+   same overall size/pointed silhouette as before, just as one shape. */
 .review-section .highlight-banner .sliderbackground-overlay {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 250px;
+  width: 284px;
   background-color: #f0f0f0;
   z-index: 0;
   pointer-events: none;
   height: 100%;
-}
-.review-section .highlight-banner .sliderbackground-overlay:after {
-  width: 0px;
-  height: 0px;
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: 0px;
-  border-style: solid;
-  border-width: 24px 0 24px 17px;
-  border-color: transparent transparent transparent var(--color-purple);
+  clip-path: polygon(0% 50%, 5.99% 0%, 94.01% 0%, 100% 50%, 94.01% 100%, 5.99% 100%);
 }
 .reviewslider-nav {
   position: relative;
@@ -168,7 +154,12 @@
     margin: 0px 0px 10px;
   }
   .review-section .highlight-banner .sliderbackground-overlay {
-    width: 215px;
+    /* 215px original width + 17px point on each side = 249px; the point's
+       share of that total width is a different percentage than at the
+       284px desktop size, so the polygon is recomputed here to keep the
+       same absolute 17px point width rather than reusing the desktop one. */
+    width: 249px;
+    clip-path: polygon(0% 50%, 6.83% 0%, 93.17% 0%, 100% 50%, 93.17% 100%, 6.83% 100%);
   }
   .review-section .highlight-banner .navtab-slide {
     min-width: 215px;
