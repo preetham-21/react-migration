@@ -17,28 +17,6 @@ header.fixed-top.hidden-header {
   padding: 0px 15px;
   box-shadow: 0px 0px 8px 0px #999;
 }
-/* Bootstrap's .navbar defaults to flex-wrap:wrap, and while
-   .navbar-expand-lg sets nowrap back from 992px up, that's a narrower
-   selector than this rule needs to beat reliably -- !important plus the
-   exact class combination on the markup guarantees it wins regardless of
-   stylesheet load order. Logo + centered nav menu + login button could
-   otherwise momentarily exceed the row's width while resizing, wrapping
-   the login button onto its own (lower, visually "outside the box") line. */
-nav.navbar.nav-section {
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-}
-/* The centered nav-links block is the one part of the row with no fixed
-   content it must fit exactly -- letting it shrink (rather than the logo
-   or login button, both given flex-shrink:0 below) is what keeps the row
-   from ever needing to wrap in the first place. */
-#navbarNav {
-  min-width: 0;
-  flex-shrink: 1;
-}
-.navbar-brand {
-  flex-shrink: 0;
-}
 header.fixed-top .loginbtn {
   font-size: 20px;
   font-weight: 700;
@@ -48,7 +26,6 @@ header.fixed-top .loginbtn {
   border-radius: 12px;
   color: #fff !important;
   text-decoration: none !important;
-  flex-shrink: 0;
   white-space: nowrap;
 }
 header.fixed-top .loginbtn:hover {
@@ -103,14 +80,53 @@ header.fixed-top .navbar-nav .nav-link:hover {
   padding: 0px 10px;
 }
 
+/* Bootstrap's own .navbar-expand-lg rule (verified against the actual
+   4.5.2 stylesheet) sets `flex-flow: row nowrap` from 992px up -- nowrap
+   was never actually missing there. What it ALSO does is switch
+   `justify-content` from the base .navbar's `space-between` to
+   `flex-start`, and leaves #navbarNav's own base `flex-grow:1` as the only
+   thing keeping the logo/menu/login-button spread across the row --
+   nothing pins each of the three groups to an explicit, independent
+   position. Rather than continuing to patch individual flex properties
+   against that chain, every property this row's layout depends on is
+   pinned explicitly here: space-between distributes the three groups
+   directly (no reliance on one item growing to "absorb" the others), and
+   each group's own shrink/grow/basis is set so none of them can be
+   resized into wrapping or dropping, at any width in this range. */
+@media (min-width: 993px) {
+  nav.navbar.nav-section {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .navbar-brand {
+    flex: 0 0 auto !important;
+  }
+  #navbarNav.collapse.navbar-collapse {
+    display: flex !important;
+    flex: 0 1 auto !important;
+    min-width: 0;
+    justify-content: center !important;
+  }
+  .navbarmenu {
+    min-width: 0;
+  }
+  header.fixed-top .loginbtn.ml-auto {
+    flex: 0 0 auto !important;
+    margin-left: 20px !important;
+  }
+}
+
 @media (max-width: 992px) {
   .nav-section {
     padding: 6px 15px;
   }
   /* At narrow widths the 55px-tall logo plus the toggler button could
-     exceed the row's width -- .navbar is nowrap unconditionally now (see
-     above), so shrinking the logo here just gives both enough room to
-     comfortably share the row, keeping them on the same vertical axis. */
+     exceed the row's width -- .navbar-toggler is hidden above 992px by
+     Bootstrap's own .navbar-expand-lg rule, so this only matters here,
+     below it -- shrinking the logo gives both enough room to comfortably
+     share the row on the same vertical axis. */
   .navbar-brand img {
     height: 38px;
   }
