@@ -44,5 +44,5 @@ export default function useCounter(target, duration = 3000) {
     };
   }, [target, duration]);
 
-  return { ref, display: value.toFixed(1) };
+  return { ref, display: value.toFixed(1), progress: target === 0 ? 1 : value / target };
 }

@@ -17,6 +17,15 @@ header.fixed-top.hidden-header {
   padding: 0px 15px;
   box-shadow: 0px 0px 8px 0px #999;
 }
+/* Bootstrap's .navbar defaults to flex-wrap:wrap at every width, not just
+   mobile. Logo + centered nav menu + login button can momentarily exceed
+   the row's width while resizing through in-between desktop widths,
+   wrapping the login button onto its own (lower) line. nowrap keeps it on
+   the same row at every width, not just the <=992px case. */
+.navbar {
+  flex-wrap: nowrap;
+  align-items: center;
+}
 header.fixed-top .loginbtn {
   font-size: 20px;
   font-weight: 700;
@@ -84,14 +93,9 @@ header.fixed-top .navbar-nav .nav-link:hover {
     padding: 6px 15px;
   }
   /* At narrow widths the 55px-tall logo plus the toggler button could
-     exceed the row's width, so the flex row (Bootstrap's .navbar default)
-     wrapped the toggler onto its own line below the logo. Keeping the row
-     on one line and shrinking the logo keeps both on the same vertical
-     axis, matching the original mobile header. */
-  .navbar {
-    flex-wrap: nowrap;
-    align-items: center;
-  }
+     exceed the row's width -- .navbar is nowrap unconditionally now (see
+     above), so shrinking the logo here just gives both enough room to
+     comfortably share the row, keeping them on the same vertical axis. */
   .navbar-brand img {
     height: 38px;
   }

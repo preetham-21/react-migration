@@ -50,10 +50,14 @@
   border-color: transparent var(--color-purple) transparent transparent;
   /* The section's actual background isn't a flat purple -- .pinwheelshadow
      lays a swirled pattern over it (see ServiceStatus.css) -- so a fully
-     solid triangle in one flat hue reads as a hard-edged, pasted-on shape
-     against it. Letting some of that pattern show through softens the
-     edge so it blends instead of standing out. */
-  opacity: 0.55;
+     solid triangle in one flat hue can read as a hard-edged, pasted-on
+     shape against it. `opacity` was tried here, but this triangle sits
+     right against the white (#f0f0f0) ribbon rectangle, and opacity let
+     that white show through underneath instead of the purple pattern --
+     multiply keeps it fully purple against white (multiplying by white is
+     a no-op) while still naturally darkening/blending with whichever
+     purple shade of the pattern is actually behind it elsewhere. */
+  mix-blend-mode: multiply;
 }
 .review-section .highlight-banner .sliderbackground-overlay {
   position: absolute;
@@ -76,7 +80,7 @@
   border-style: solid;
   border-width: 24px 0 24px 17px;
   border-color: transparent transparent transparent var(--color-purple);
-  opacity: 0.55;
+  mix-blend-mode: multiply;
 }
 .reviewslider-nav {
   position: relative;
