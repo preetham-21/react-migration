@@ -172,7 +172,12 @@ export default function Reviews() {
                   {iosCounter.display}
                 </h3>
                 <div className="stars mb-2">
-                  <img src="/assets/images/iosrating.svg" alt="Ios Star" className="iosreview star" />
+                  <img
+                    src="/assets/images/iosrating.svg"
+                    alt="Ios Star"
+                    className="iosreview star star-fill"
+                    style={{ clipPath: `inset(0 ${100 - (parseFloat(iosCounter.display) / 5) * 100}% 0 0)` }}
+                  />
                 </div>
                 <p className="text-white">App Store Rating</p>
               </div>
@@ -181,7 +186,12 @@ export default function Reviews() {
                   {androidCounter.display}
                 </h3>
                 <div className="stars mb-2">
-                  <img src="/assets/images/androidrating.svg" alt="Ios Star" className="androidreview star" />
+                  <img
+                    src="/assets/images/androidrating.svg"
+                    alt="Ios Star"
+                    className="androidreview star star-fill"
+                    style={{ clipPath: `inset(0 ${100 - (parseFloat(androidCounter.display) / 5) * 100}% 0 0)` }}
+                  />
                 </div>
                 <p className="text-white">Google Play Rating</p>
               </div>

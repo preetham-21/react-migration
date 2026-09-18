@@ -83,6 +83,18 @@ header.fixed-top .navbar-nav .nav-link:hover {
   .nav-section {
     padding: 6px 15px;
   }
+  /* At narrow widths the 55px-tall logo plus the toggler button could
+     exceed the row's width, so the flex row (Bootstrap's .navbar default)
+     wrapped the toggler onto its own line below the logo. Keeping the row
+     on one line and shrinking the logo keeps both on the same vertical
+     axis, matching the original mobile header. */
+  .navbar {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .navbar-brand img {
+    height: 38px;
+  }
   ul.navbar-nav {
     gap: 4px;
     padding-top: 10px;
@@ -92,6 +104,7 @@ header.fixed-top .navbar-nav .nav-link:hover {
   }
   .navbar-toggler {
     margin-left: auto;
+    flex-shrink: 0;
   }
   .navbar-light .navbar-toggler:focus,
   .navbar-light .navbar-toggler:hover {
