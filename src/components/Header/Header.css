@@ -17,14 +17,27 @@ header.fixed-top.hidden-header {
   padding: 0px 15px;
   box-shadow: 0px 0px 8px 0px #999;
 }
-/* Bootstrap's .navbar defaults to flex-wrap:wrap at every width, not just
-   mobile. Logo + centered nav menu + login button can momentarily exceed
-   the row's width while resizing through in-between desktop widths,
-   wrapping the login button onto its own (lower) line. nowrap keeps it on
-   the same row at every width, not just the <=992px case. */
-.navbar {
-  flex-wrap: nowrap;
-  align-items: center;
+/* Bootstrap's .navbar defaults to flex-wrap:wrap, and while
+   .navbar-expand-lg sets nowrap back from 992px up, that's a narrower
+   selector than this rule needs to beat reliably -- !important plus the
+   exact class combination on the markup guarantees it wins regardless of
+   stylesheet load order. Logo + centered nav menu + login button could
+   otherwise momentarily exceed the row's width while resizing, wrapping
+   the login button onto its own (lower, visually "outside the box") line. */
+nav.navbar.nav-section {
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+}
+/* The centered nav-links block is the one part of the row with no fixed
+   content it must fit exactly -- letting it shrink (rather than the logo
+   or login button, both given flex-shrink:0 below) is what keeps the row
+   from ever needing to wrap in the first place. */
+#navbarNav {
+  min-width: 0;
+  flex-shrink: 1;
+}
+.navbar-brand {
+  flex-shrink: 0;
 }
 header.fixed-top .loginbtn {
   font-size: 20px;
@@ -35,6 +48,8 @@ header.fixed-top .loginbtn {
   border-radius: 12px;
   color: #fff !important;
   text-decoration: none !important;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 header.fixed-top .loginbtn:hover {
   background-color: var(--action_hvr_clr);

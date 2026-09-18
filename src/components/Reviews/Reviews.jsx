@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Slider from 'react-slick';
 import reviews from '../../data/reviews';
 import useCounter from '../../hooks/useCounter';
+import StarRating from './StarRating';
 import './Reviews.css';
 
 // react-slick's default appendDots renders <ul style={{ display: "block" }}>.
@@ -171,28 +172,14 @@ export default function Reviews() {
                 <h3 className="text-white rating-point counter" ref={iosCounter.ref}>
                   {iosCounter.display}
                 </h3>
-                <div className="stars mb-2">
-                  <img
-                    src="/assets/images/iosrating.svg"
-                    alt="Ios Star"
-                    className="iosreview star star-fill"
-                    style={{ clipPath: `inset(0 ${100 - Math.min(iosCounter.progress, 1) * 100}% 0 0)` }}
-                  />
-                </div>
+                <StarRating rating={4.8} className="iosreview" />
                 <p className="text-white">App Store Rating</p>
               </div>
               <div className="col-md-6 reveal-pane reveal fade-bottom">
                 <h3 className="text-white rating-point counter" ref={androidCounter.ref}>
                   {androidCounter.display}
                 </h3>
-                <div className="stars mb-2">
-                  <img
-                    src="/assets/images/androidrating.svg"
-                    alt="Ios Star"
-                    className="androidreview star star-fill"
-                    style={{ clipPath: `inset(0 ${100 - Math.min(androidCounter.progress, 1) * 100}% 0 0)` }}
-                  />
-                </div>
+                <StarRating rating={4.7} className="androidreview" />
                 <p className="text-white">Google Play Rating</p>
               </div>
             </div>

@@ -3,15 +3,42 @@
   padding: 50px 0;
   background: #931D65;
 }
-.review-section .stars img {
-  height: 45px;
-  margin: 0 2px;
+/* Fully dynamic star rating -- no image assets. Each star is drawn twice:
+   a dim outline copy, and a solid orange copy on top clipped to whatever
+   fraction of that star the rating fills (1 for a full star, a fraction
+   for a partial one, not rendered at all for an empty one). Static --
+   driven directly by the rating value, not animated. */
+.rating-stars {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 0.5rem;
 }
-/* The star image starts fully clipped away (clip-path set inline, tied to
-   the same counter progress driving the "0.0" -> "4.8" number) and reveals
-   left-to-right as the rating counts up, instead of just appearing static. */
-.review-section .stars img.star-fill {
-  transition: clip-path 0.1s linear;
+.rating-star {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 38px;
+}
+.rating-star-outline,
+.rating-star-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.rating-star-outline path {
+  fill: rgba(255, 255, 255, 0.35);
+}
+.rating-star-fill path {
+  fill: var(--color_orange);
+}
+@media (max-width: 767px) {
+  .rating-star {
+    width: 30px;
+    height: 30px;
+  }
 }
 .rating-point {
   font-size: 50px;
@@ -49,15 +76,20 @@
   border-width: 24px 17px 24px 0;
   border-color: transparent var(--color-purple) transparent transparent;
   /* The section's actual background isn't a flat purple -- .pinwheelshadow
-     lays a swirled pattern over it (see ServiceStatus.css) -- so a fully
-     solid triangle in one flat hue can read as a hard-edged, pasted-on
-     shape against it. `opacity` was tried here, but this triangle sits
-     right against the white (#f0f0f0) ribbon rectangle, and opacity let
-     that white show through underneath instead of the purple pattern --
-     multiply keeps it fully purple against white (multiplying by white is
-     a no-op) while still naturally darkening/blending with whichever
-     purple shade of the pattern is actually behind it elsewhere. */
+     lays a swirled, multi-shade pattern over it (see ServiceStatus.css) --
+     so no single flat color can exactly match every shade behind this
+     triangle at once. `opacity` was tried first, but this triangle
+     overlaps the white (#f0f0f0) ribbon rectangle enough that opacity let
+     that white show through underneath, instead of the purple pattern.
+     `mix-blend-mode: multiply` fixes that (multiplying by white is a
+     no-op, so it stays solid purple there) and darkens toward whatever
+     purple shade is actually behind it elsewhere -- but a crisp geometric
+     border edge still reads as a distinct pasted-on shape against a soft
+     gradient. A small blur diffuses that hard edge into the pattern
+     instead of leaving a sharp line, which is what was still making it
+     "highlighted" rather than blended. */
   mix-blend-mode: multiply;
+  filter: blur(2px);
 }
 .review-section .highlight-banner .sliderbackground-overlay {
   position: absolute;
@@ -81,6 +113,7 @@
   border-width: 24px 0 24px 17px;
   border-color: transparent transparent transparent var(--color-purple);
   mix-blend-mode: multiply;
+  filter: blur(2px);
 }
 .reviewslider-nav {
   position: relative;
