@@ -90,26 +90,26 @@
    triangle pseudo-elements colored to match the section's background, so
    they'd "disappear" against it -- but the actual background is a
    multi-shade gradient pattern (.pinwheelshadow), not one flat color, so
-   no single flat triangle color could ever match all of it at once (tried
-   three different color/opacity/blend-mode combinations; all looked
-   wrong). The fix is to not need a color match at all: cut the pointed
-   shape directly out of the ribbon rectangle itself via clip-path, so the
-   whole ribbon is one plain #f0f0f0 shape with nothing else layered on
-   top that needs to blend with anything. The rectangle is widened by the
-   old triangles' 17px point-width on each side, and the two extra
-   polygon points on each end taper it to a single sharp vertex there --
-   same overall size/pointed silhouette as before, just as one shape. */
+   no single flat triangle color could ever match all of it at once. The
+   fix is to not need a color match at all: cut the pointed shape directly
+   out of the ribbon rectangle itself via clip-path, so the whole ribbon is
+   one plain #f0f0f0 shape with nothing else layered on top that needs to
+   blend with anything. The correct silhouette (per the reference image)
+   is a V-notch cut INWARD at each end -- the top/bottom corners are the
+   outermost points, tapering in to a single point at mid-height -- not a
+   vertex poking outward, so the rectangle stays its original width (no
+   extension needed) and only its own corners are clipped away. */
 .review-section .highlight-banner .sliderbackground-overlay {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 284px;
+  width: 250px;
   background-color: #f0f0f0;
   z-index: 0;
   pointer-events: none;
   height: 100%;
-  clip-path: polygon(0% 50%, 5.99% 0%, 94.01% 0%, 100% 50%, 94.01% 100%, 5.99% 100%);
+  clip-path: polygon(0% 0%, 6.8% 50%, 0% 100%, 100% 100%, 93.2% 50%, 100% 0%);
 }
 .reviewslider-nav {
   position: relative;
@@ -154,12 +154,11 @@
     margin: 0px 0px 10px;
   }
   .review-section .highlight-banner .sliderbackground-overlay {
-    /* 215px original width + 17px point on each side = 249px; the point's
-       share of that total width is a different percentage than at the
-       284px desktop size, so the polygon is recomputed here to keep the
-       same absolute 17px point width rather than reusing the desktop one. */
-    width: 249px;
-    clip-path: polygon(0% 50%, 6.83% 0%, 93.17% 0%, 100% 50%, 93.17% 100%, 6.83% 100%);
+    /* The notch's absolute 17px depth is a different percentage of this
+       215px width than of the 250px desktop width, so it's recomputed
+       here rather than reusing the desktop percentage. */
+    width: 215px;
+    clip-path: polygon(0% 0%, 7.91% 50%, 0% 100%, 100% 100%, 92.09% 50%, 100% 0%);
   }
   .review-section .highlight-banner .navtab-slide {
     min-width: 215px;
