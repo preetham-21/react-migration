@@ -80,15 +80,15 @@ export default function ServiceStatus({ onHideHeader }) {
                     L298,310
                     Q310,310 310,322
                     L310,402"
-                  stroke="white"
+                  stroke="#FFDD00"
                   strokeWidth="2"
                   fill="none"
                 ></path>
                 <circle
                   id="movingCircle"
                   r="5"
-                  fill="#f7941d"
-                  stroke="white"
+                  fill="white"
+                  stroke="#FFDD00"
                   strokeWidth="2"
                   transform={`translate(${circlePoint.x}, ${circlePoint.y})`}
                 ></circle>

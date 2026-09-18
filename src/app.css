@@ -17,7 +17,7 @@
      separate from --action_clr (green) since that variable is also used
      by the header's active-nav color and login button, which are staying
      green and shouldn't change just because the Hero background does. */
-  --home_clr: #0F3460;
+  --home_clr: #02023A;
   --font-normal: 'Figtree';
   --font-light: 'FigtreeLight';
   --font-bold: 'FigtreeSemiBold';
@@ -57,9 +57,12 @@ img, img:focus {
 }
 .section-title {
   font-size: 44px;
-  font-weight: 300;
+  font-weight: 700;
   line-height: 50px;
-  font-family: var(--ff-newsprit);
+  /* Was --ff-newsprit (a separate display font). Switched to the same
+     Figtree family the rest of the content uses, in its bold weight, per
+     request -- headings now share the body font instead of a distinct one. */
+  font-family: var(--font-bold);
 }
 .bold-text {
   font-family: var(--font-bold);
