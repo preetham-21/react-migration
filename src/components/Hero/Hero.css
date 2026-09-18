@@ -1,7 +1,7 @@
 .home-section {
   padding: 140px 0px 200px;
   min-height: 100vh;
-  background: var(--action_clr) url('/assets/images/pinwheel.svg') center center no-repeat;
+  background: var(--home_clr) url('/assets/images/pinwheel.svg') center center no-repeat;
   background-size: 110%;
 }
 .youtube-btn,

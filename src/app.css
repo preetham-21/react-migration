@@ -13,6 +13,11 @@
   --color-lggrey: #cecece;
   --color-kinetic: #949494;
   --color-purple: #931D65;
+  /* Dedicated to the Home/Hero section's background specifically -- kept
+     separate from --action_clr (green) since that variable is also used
+     by the header's active-nav color and login button, which are staying
+     green and shouldn't change just because the Hero background does. */
+  --home_clr: #0F3460;
   --font-normal: 'Figtree';
   --font-light: 'FigtreeLight';
   --font-bold: 'FigtreeSemiBold';

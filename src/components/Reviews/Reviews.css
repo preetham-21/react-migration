@@ -1,7 +1,7 @@
 .review-section {
   color: white;
   padding: 50px 0;
-  background: #931D65;
+  background: var(--action_clr);
 }
 /* Fully dynamic star rating -- no image assets. Each star is drawn twice:
    a dim outline copy, and a solid orange copy on top clipped to whatever
@@ -121,7 +121,11 @@
   width: 100px;
   left: 0px;
   content: '';
-  background: linear-gradient(90deg, #841a5f 0%, transparent 80%);
+  /* A ~90%-brightness shade of the section's own background (matching the
+     original's #841a5f, which was the same relationship to its old
+     #931D65 purple background), so the nav bar's edges fade into
+     whatever the section's background actually is. */
+  background: linear-gradient(90deg, #20965F 0%, transparent 80%);
   display: block;
   position: absolute;
   top: 0px;
@@ -131,7 +135,7 @@
 .reviewslider-nav:after {
   left: auto;
   right: 0px;
-  background: linear-gradient(90deg, transparent 0%, #841a5f 80%);
+  background: linear-gradient(90deg, transparent 0%, #20965F 80%);
 }
 .navtab-track {
   display: flex;
@@ -143,7 +147,7 @@
 .review-section .highlight-banner .navtab-slide.slick-current {
   position: relative;
   opacity: 1;
-  color: var(--color-purple);
+  color: var(--action_clr);
 }
 
 @media (max-width: 767px) {
